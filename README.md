@@ -95,7 +95,7 @@ To work with this repository locally:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/single-cell-omics-kb.git
+git clone https://github.com/shd-test/Knowledge-base.git
 cd single-cell-omics-kb
 
 # Install required R packages
@@ -107,8 +107,8 @@ Rscript -e "rmarkdown::render('path/to/your/document.Rmd')"
 
 ## 📞 Support
 
-- **Issues**: Report problems or request features via [GitHub Issues](https://github.com/your-org/single-cell-omics-kb/issues)
-- **Discussions**: Ask questions in [GitHub Discussions](https://github.com/your-org/single-cell-omics-kb/discussions)
+- **Issues**: Report problems or request features via [GitHub Issues](https://github.com/shd-test/Knowledge-base/issues)
+- **Discussions**: Ask questions in [GitHub Discussions](https://github.com/shd-test/Knowledge-base/discussions)
 - **Contact**: Reach out to the maintainers listed in [CONTRIBUTORS.md](CONTRIBUTORS.md)
 
 ## 📄 License
@@ -121,7 +121,7 @@ If you use content from this knowledge base in your research, please cite:
 
 ```
 Single Cell Omics Knowledge Base. GitHub repository: 
-https://github.com/your-org/single-cell-omics-kb
+https://github.com/shd-test/Knowledge-base
 ```
 
 ---
