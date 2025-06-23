@@ -1,0 +1,337 @@
+---
+title: "Analysis Title: Descriptive Analysis Name"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+    theme: flatly
+    highlight: tango
+    df_print: paged
+categories: ["RNA-seq", "method", "tool-name"]
+tags: ["single-cell", "transcriptomics", "analysis-type"]
+level: "intermediate"  # beginner, intermediate, advanced
+estimated_time: "2 hours"
+prerequisites: 
+  - "Basic R knowledge"
+  - "Understanding of single-cell concepts"
+  - "Familiarity with Seurat/tool-name"
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 6,
+  fig.align = "center",
+  dpi = 300
+)
+
+# Set random seed for reproducibility
+set.seed(42)
+```
+
+## Abstract
+
+Provide a brief summary (2-3 sentences) of:
+- The biological question being addressed
+- The main analysis approach
+- Key findings or outcomes
+
+## Background
+
+### Biological Context
+- What biological question are we trying to answer?
+- Why is this analysis important?
+- What prior knowledge exists?
+
+### Technical Context
+- What methods/tools are being used?
+- Why were these methods chosen?
+- What are the key assumptions?
+
+## Prerequisites
+
+### Data Requirements
+- Type of single-cell data needed
+- Minimum number of cells/samples
+- Quality requirements
+
+### Software Requirements
+- R version and key packages
+- Any special installations needed
+- Computational requirements
+
+### Knowledge Requirements
+- Background knowledge assumed
+- Recommended reading/tutorials
+
+## Setup
+
+### Load Libraries
+```{r load-libraries}
+# Core single-cell analysis
+library(Seurat)
+library(SingleCellExperiment)
+
+# Data manipulation
+library(dplyr)
+library(tidyr)
+library(magrittr)
+
+# Visualization
+library(ggplot2)
+library(plotly)
+library(DT)
+library(patchwork)
+
+# Utilities
+library(here)
+library(sessioninfo)
+```
+
+### Define Parameters
+```{r define-parameters}
+# Analysis parameters
+n_variable_features <- 2000
+resolution <- 0.5
+n_dims <- 30
+
+# Visualization parameters
+point_size <- 0.5
+alpha <- 0.7
+
+# File paths (use relative paths)
+data_dir <- here("data")
+results_dir <- here("results")
+plots_dir <- here("plots")
+
+# Create directories if they don't exist
+dir.create(results_dir, showWarnings = FALSE)
+dir.create(plots_dir, showWarnings = FALSE)
+```
+
+## Data Loading and Preparation
+
+### Load Data
+```{r load-data}
+# Load your single-cell data
+# Example for 10X data:
+# seurat_obj <- Read10X(data.dir = file.path(data_dir, "filtered_feature_bc_matrix"))
+# seurat_obj <- CreateSeuratObject(counts = seurat_obj, project = "analysis_name")
+
+# Example for loading saved object:
+# seurat_obj <- readRDS(file.path(data_dir, "seurat_object.rds"))
+
+# For this template, create example data
+seurat_obj <- pbmc_small  # Using built-in example data
+```
+
+### Initial Data Exploration
+```{r explore-data}
+# Basic information about the dataset
+cat("Number of cells:", ncol(seurat_obj), "\n")
+cat("Number of features:", nrow(seurat_obj), "\n")
+cat("Sample information:\n")
+table(seurat_obj$orig.ident)
+```
+
+### Quality Control Metrics
+```{r quality-control}
+# Calculate QC metrics
+seurat_obj[["percent.mt"]] <- PercentageFeatureSet(seurat_obj, pattern = "^MT-")
+seurat_obj[["percent.ribo"]] <- PercentageFeatureSet(seurat_obj, pattern = "^RP[SL]")
+
+# Visualize QC metrics
+qc_plots <- VlnPlot(seurat_obj, 
+                    features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
+                    ncol = 3,
+                    pt.size = 0.1)
+print(qc_plots)
+```
+
+## Analysis Workflow
+
+### Step 1: Data Preprocessing
+```{r preprocessing}
+# Filter cells and features
+seurat_obj <- subset(seurat_obj, 
+                     subset = nFeature_RNA > 200 & 
+                             nFeature_RNA < 5000 & 
+                             percent.mt < 20)
+
+# Normalize data
+seurat_obj <- NormalizeData(seurat_obj, 
+                           normalization.method = "LogNormalize",
+                           scale.factor = 10000)
+
+# Find variable features
+seurat_obj <- FindVariableFeatures(seurat_obj, 
+                                  selection.method = "vst",
+                                  nfeatures = n_variable_features)
+
+# Visualize variable features
+top10 <- head(VariableFeatures(seurat_obj), 10)
+variable_plot <- VariableFeaturePlot(seurat_obj)
+labeled_plot <- LabelPoints(plot = variable_plot, 
+                           points = top10, 
+                           repel = TRUE)
+print(labeled_plot)
+```
+
+### Step 2: Dimensionality Reduction
+```{r dimensionality-reduction}
+# Scale data
+all_genes <- rownames(seurat_obj)
+seurat_obj <- ScaleData(seurat_obj, features = all_genes)
+
+# Run PCA
+seurat_obj <- RunPCA(seurat_obj, 
+                    features = VariableFeatures(object = seurat_obj))
+
+# Visualize PCA
+print(DimPlot(seurat_obj, reduction = "pca"))
+
+# Determine dimensionality
+print(ElbowPlot(seurat_obj, ndims = 50))
+```
+
+### Step 3: Clustering
+```{r clustering}
+# Find neighbors
+seurat_obj <- FindNeighbors(seurat_obj, dims = 1:n_dims)
+
+# Find clusters
+seurat_obj <- FindClusters(seurat_obj, resolution = resolution)
+
+# Run UMAP
+seurat_obj <- RunUMAP(seurat_obj, dims = 1:n_dims)
+
+# Visualize clusters
+cluster_plot <- DimPlot(seurat_obj, 
+                       reduction = "umap", 
+                       label = TRUE,
+                       pt.size = point_size) + 
+                NoLegend()
+print(cluster_plot)
+```
+
+### Step 4: [Add your specific analysis steps]
+```{r specific-analysis}
+# Add your specific analysis code here
+# This could be:
+# - Differential expression analysis
+# - Trajectory analysis
+# - Cell type annotation
+# - Integration analysis
+# - etc.
+
+# Example: Find cluster markers
+cluster_markers <- FindAllMarkers(seurat_obj, 
+                                 only.pos = TRUE,
+                                 min.pct = 0.25,
+                                 logfc.threshold = 0.25)
+
+# Display top markers
+cluster_markers %>%
+  group_by(cluster) %>%
+  slice_max(n = 5, order_by = avg_log2FC) %>%
+  DT::datatable(options = list(scrollX = TRUE))
+```
+
+## Results and Interpretation
+
+### Key Findings
+Summarize the main results of your analysis:
+
+1. **Finding 1**: Brief description and biological interpretation
+2. **Finding 2**: Brief description and biological interpretation
+3. **Finding 3**: Brief description and biological interpretation
+
+### Visualizations
+```{r results-visualization}
+# Create comprehensive results plots
+results_plot <- (cluster_plot | FeaturePlot(seurat_obj, features = "nFeature_RNA")) /
+                (VlnPlot(seurat_obj, features = "nCount_RNA") | 
+                 VlnPlot(seurat_obj, features = "percent.mt"))
+
+print(results_plot)
+```
+
+### Statistical Summary
+```{r statistical-summary}
+# Provide statistical summaries
+summary_stats <- seurat_obj@meta.data %>%
+  group_by(seurat_clusters) %>%
+  summarise(
+    n_cells = n(),
+    mean_features = mean(nFeature_RNA),
+    mean_counts = mean(nCount_RNA),
+    mean_mt = mean(percent.mt),
+    .groups = "drop"
+  )
+
+DT::datatable(summary_stats, options = list(scrollX = TRUE))
+```
+
+## Discussion
+
+### Biological Interpretation
+- What do these results tell us about the biological system?
+- How do they relate to existing knowledge?
+- What are the implications for the field?
+
+### Technical Considerations
+- What are the limitations of this analysis?
+- What assumptions were made?
+- What could be improved in future analyses?
+
+### Next Steps
+- What follow-up experiments or analyses are suggested?
+- What additional data would be helpful?
+- What other computational approaches could be applied?
+
+## Conclusion
+
+Provide a brief conclusion that:
+- Summarizes the main findings
+- Highlights the biological significance
+- Suggests future directions
+
+## Data Availability
+
+- **Raw data**: [Specify where raw data can be accessed]
+- **Processed data**: [Specify where processed data can be accessed]
+- **Code**: Available in this repository
+- **External resources**: [List any external databases or tools used]
+
+## References
+
+Include relevant citations here, or use a separate .bib file if using bibliography.
+
+## Session Information
+
+```{r session-info}
+sessioninfo::session_info()
+```
+
+## Reproducibility
+
+This analysis was conducted with the following considerations for reproducibility:
+
+- Random seed set for all stochastic operations
+- Package versions recorded in session information
+- Relative file paths used throughout
+- Parameters defined at the beginning of the analysis
+- Clear documentation of all analysis steps
+
+---
+
+*Analysis completed on `r Sys.Date()`*
+*For questions or issues, please contact [your-email] or open an issue on GitHub.*

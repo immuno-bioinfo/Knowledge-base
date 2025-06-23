@@ -1,0 +1,38 @@
+# GitHub Pages configuration
+title: "Single Cell Omics Knowledge Base"
+description: "Collaborative knowledge base for single-cell omics research"
+url: "https://shd-test.github.io"
+baseurl: "/Knowledge-base"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Collections
+collections:
+  analyses:
+    output: true
+    permalink: /:collection/:name/
+  protocols:
+    output: true
+    permalink: /:collection/:name/
+  tutorials:
+    output: true
+    permalink: /:collection/:name/
+  references:
+    output: true
+    permalink: /:collection/:name/
+
+# Exclude from processing
+exclude:
+  - templates/
+  - README.md
+  - CONTRIBUTING.md
+  - LICENSE
+  - .gitignore

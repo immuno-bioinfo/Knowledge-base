@@ -1,0 +1,30 @@
+# R and RStudio files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# R Markdown
+*_cache/
+*_files/
+*.utf8.md
+*.knit.md
+
+# Large data files
+*.h5
+*.h5ad
+*.h5seurat
+*.rds
+*.RDS
+
+# Temporary files
+*~
+.DS_Store
+Thumbs.db
+
+# Site generation
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
