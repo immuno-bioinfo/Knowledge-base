@@ -24,17 +24,24 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
-    - name: Cache R packages
-      uses: actions/cache@v3
+    - name: Setup renv
+      uses: r-lib/actions/setup-renv@v2
       with:
-        path: ~/.local/share/renv
-        key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-renv-
+        cache-version: 1
 
     - name: Install R dependencies
       run: |
-        R -e "install.packages(c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly'))"
+        # Initialize renv if not already done
+        if [ ! -f "renv.lock" ]; then
+          R -e "
+          if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv')
+          renv::init()
+          renv::install(c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly'))
+          renv::snapshot()
+          "
+        else
+          R -e "renv::restore()"
+        fi
 
     - name: Create output directory
       run: mkdir -p _site
@@ -43,6 +50,7 @@ jobs:
       run: |
         # Create a script to render all .Rmd files
         cat > render_all.R << 'EOF'
+        renv::load()
         library(rmarkdown)
         library(here)
 
