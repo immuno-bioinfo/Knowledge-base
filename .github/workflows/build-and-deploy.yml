@@ -24,24 +24,28 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
-    - name: Setup renv
-      uses: r-lib/actions/setup-renv@v2
+    - name: Cache R packages
+      uses: actions/cache@v3
       with:
-        cache-version: 1
+        path: ${{ env.R_LIBS_USER }}
+        key: ${{ runner.os }}-r-packages-${{ hashFiles('**/DESCRIPTION') }}-v2
+        restore-keys: |
+          ${{ runner.os }}-r-packages-
 
     - name: Install R dependencies
       run: |
-        # Initialize renv if not already done
-        if [ ! -f "renv.lock" ]; then
-          R -e "
-          if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv')
-          renv::init()
-          renv::install(c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly'))
-          renv::snapshot()
-          "
-        else
-          R -e "renv::restore()"
-        fi
+        Rscript -e "
+        packages <- c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly')
+        new_packages <- packages[!(packages %in% installed.packages()[,'Package'])]
+        if(length(new_packages)) {
+          cat('Installing packages:', paste(new_packages, collapse=', '), '\n')
+          install.packages(new_packages, dependencies=TRUE, repos='https://cran.rstudio.com/')
+        } else {
+          cat('All required packages already installed from cache\n')
+        }
+        cat('Installed packages:\n')
+        print(installed.packages()[packages[packages %in% installed.packages()[,'Package']], c('Package', 'Version')])
+        "
 
     - name: Create output directory
       run: mkdir -p _site
@@ -50,7 +54,6 @@ jobs:
       run: |
         # Create a script to render all .Rmd files
         cat > render_all.R << 'EOF'
-        renv::load()
         library(rmarkdown)
         library(here)
 
