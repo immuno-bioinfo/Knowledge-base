@@ -1,32 +1,29 @@
 name: Build and Deploy Knowledge Base
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-      
+
     - name: Setup R
       uses: r-lib/actions/setup-r@v2
       with:
         r-version: '4.3.0'
-        
+
     - name: Setup Pandoc
       uses: r-lib/actions/setup-pandoc@v2
-      
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
-        
+
     - name: Cache R packages
       uses: actions/cache@v3
       with:
@@ -34,36 +31,36 @@ jobs:
         key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
         restore-keys: |
           ${{ runner.os }}-renv-
-          
+
     - name: Install R dependencies
       run: |
         R -e "install.packages(c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly'))"
-        
+
     - name: Create output directory
       run: mkdir -p _site
-      
+
     - name: Build R Markdown files
       run: |
         # Create a script to render all .Rmd files
         cat > render_all.R << 'EOF'
         library(rmarkdown)
         library(here)
-        
+
         # Function to render Rmd files
         render_rmd_files <- function(dir) {
           rmd_files <- list.files(dir, pattern = "\\.Rmd$", full.names = TRUE, recursive = TRUE)
-          
+
           for (file in rmd_files) {
             # Skip template files
             if (grepl("templates/", file)) next
-            
+
             cat("Rendering:", file, "\n")
-            
+
             # Determine output directory
             rel_path <- gsub("^\\./", "", file)
             output_dir <- file.path("_site", dirname(rel_path))
             dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-            
+
             # Render to HTML
             tryCatch({
               rmarkdown::render(
@@ -77,7 +74,7 @@ jobs:
             })
           }
         }
-        
+
         # Render all directories
         dirs <- c("analyses", "protocols", "tutorials", "references")
         for (dir in dirs) {
@@ -85,22 +82,26 @@ jobs:
             render_rmd_files(dir)
           }
         }
-        
+
         # Create index.html
-        if (file.exists("README.md")) {
-          rmarkdown::render("README.md", 
+        if (file.exists("README.Rmd")) {
+          rmarkdown::render("README.Rmd",
                           output_format = html_document(toc = TRUE, toc_float = TRUE),
                           output_file = "_site/index.html")
         }
         EOF
-        
+
         Rscript render_all.R
-        
+
     - name: Create site navigation
       run: |
+        # Get organization and repository name automatically
+        ORG_NAME="${{ github.repository_owner }}"
+        REPO_NAME="${{ github.event.repository.name }}"
+
         # Create a simple index page if it doesn't exist
         if [ ! -f "_site/index.html" ]; then
-          cat > _site/index.html << 'EOF'
+          cat > _site/index.html << EOF
         <!DOCTYPE html>
         <html>
         <head>
@@ -113,7 +114,6 @@ jobs:
             <div class="container mt-4">
                 <h1>Single Cell Omics Knowledge Base</h1>
                 <p>Welcome to our collaborative knowledge base for single-cell omics research!</p>
-                
                 <div class="row">
                     <div class="col-md-6">
                         <h3>Browse Content</h3>
@@ -127,9 +127,9 @@ jobs:
                     <div class="col-md-6">
                         <h3>Quick Links</h3>
                         <ul class="list-group">
-                            <li class="list-group-item"><a href="https://github.com/your-org/single-cell-omics-kb">GitHub Repository</a></li>
-                            <li class="list-group-item"><a href="https://github.com/your-org/single-cell-omics-kb/blob/main/CONTRIBUTING.md">Contributing Guide</a></li>
-                            <li class="list-group-item"><a href="https://github.com/your-org/single-cell-omics-kb/issues">Report Issues</a></li>
+                            <li class="list-group-item"><a href="https://github.com/${ORG_NAME}/${REPO_NAME}">GitHub Repository</a></li>
+                            <li class="list-group-item"><a href="https://github.com/${ORG_NAME}/${REPO_NAME}/blob/main/CONTRIBUTING.md">Contributing Guide</a></li>
+                            <li class="list-group-item"><a href="https://github.com/${ORG_NAME}/${REPO_NAME}/issues">Report Issues</a></li>
                         </ul>
                     </div>
                 </div>
@@ -138,7 +138,7 @@ jobs:
         </html>
         EOF
         fi
-        
+
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
       uses: peaceiris/actions-gh-pages@v3
