@@ -1,0 +1,134 @@
+name: Fetch GitHub Repository Data
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/fetch-repos.yml'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  fetch-repositories:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        pip install requests pandas
+
+    - name: Fetch repository data
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ORG_NAME: ${{ github.repository_owner }}
+      run: |
+        python << 'EOF'
+        import requests
+        import pandas as pd
+        import os
+        import json
+        from datetime import datetime
+
+        # Get environment variables
+        token = os.environ['GITHUB_TOKEN']
+        org = os.environ['ORG_NAME']
+
+        # Set up headers for GitHub API
+        headers = {
+            'Authorization': f'token {token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+
+        # Fetch all repositories (handle pagination)
+        all_repos = []
+        page = 1
+        per_page = 100
+
+        while True:
+            url = f'https://api.github.com/orgs/{org}/repos'
+            params = {
+                'page': page,
+                'per_page': per_page,
+                'type': 'all'
+            }
+
+            response = requests.get(url, headers=headers, params=params)
+
+            if response.status_code != 200:
+                print(f"Error fetching repositories: {response.status_code}")
+                print(f"Response: {response.text}")
+                exit(1)
+
+            repos = response.json()
+
+            if not repos:  # No more repositories
+                break
+
+            all_repos.extend(repos)
+            page += 1
+
+        # Extract repository data
+        repo_data = []
+        for repo in all_repos:
+            repo_info = {
+                'Repository': repo['name'],
+                'Topics': ', '.join(repo.get('topics', [])),
+                'Description': repo.get('description', ''),
+                'Language': repo.get('language', ''),
+                'Stars': repo.get('stargazers_count', 0),
+                'Forks': repo.get('forks_count', 0),
+                'Updated': repo.get('updated_at', ''),
+                'Private': repo.get('private', False),
+                'URL': repo.get('html_url', ''),
+                'Created': repo.get('created_at', ''),
+                'Size': repo.get('size', 0)
+            }
+            repo_data.append(repo_info)
+
+        # Create DataFrame and save to CSV
+        df = pd.DataFrame(repo_data)
+
+        # Sort by repository name
+        df = df.sort_values('Repository')
+
+        # Save to CSV
+        csv_path = 'assets/data/repositories.csv'
+        df.to_csv(csv_path, index=False)
+
+        print(f"Successfully saved {len(repo_data)} repositories to {csv_path}")
+        print(f"Columns: {', '.join(df.columns)}")
+
+        # Display first few rows for verification
+        print("\nFirst 5 repositories:")
+        print(df.head().to_string(index=False))
+
+        EOF
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        if [[ -n $(git status --porcelain) ]]; then
+          git add assets/data/repositories.csv
+          git commit -m "Update repository data - $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
+          echo "Repository data updated and committed"
+        else
+          echo "No changes to commit"
+        fi

@@ -26,7 +26,7 @@ This knowledge base aims to:
 ## 🚀 Getting Started
 
 ### For Readers
-- Browse the [live knowledge base](https://your-org.github.io/single-cell-omics-kb) (GitHub Pages)
+- Browse the [live knowledge base](https://shd-test.github.io/Knowledge-base) (GitHub Pages)
 - Navigate through categories using the folder structure above
 - All content is version-controlled and citable via GitHub
 
