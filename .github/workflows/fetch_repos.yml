@@ -32,6 +32,10 @@ jobs:
       run: |
         pip install requests pandas
 
+    - name: Create assets/data directory
+      run: |
+        mkdir -p assets/data
+
     - name: Fetch repository data
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
