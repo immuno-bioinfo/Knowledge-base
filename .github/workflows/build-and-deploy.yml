@@ -23,6 +23,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+        sudo apt install cargo chromium cmake gdal-bin gsfonts libcairo2-dev libfontconfig1-dev libfreetype6-dev libgdal-dev libglpk-dev libjpeg-dev libmagick++-dev libnode-dev libpng-dev librsvg2-dev libudunits2-dev libx11-dev pandoc rustc
 
     - name: Cache R packages
       uses: actions/cache@v3
@@ -35,7 +36,7 @@ jobs:
     - name: Install R dependencies
       run: |
         Rscript -e "
-        packages <- c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly', 'readr', 'dplyr')
+        packages <- c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly', 'readr', 'dplyr', 'htmlwidgets')
         new_packages <- packages[!(packages %in% installed.packages()[,'Package'])]
         if(length(new_packages)) {
           cat('Installing packages:', paste(new_packages, collapse=', '), '\n')
