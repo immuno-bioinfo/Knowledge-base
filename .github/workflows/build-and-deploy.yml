@@ -35,7 +35,7 @@ jobs:
     - name: Install R dependencies
       run: |
         Rscript -e "
-        packages <- c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly')
+        packages <- c('rmarkdown', 'knitr', 'here', 'sessioninfo', 'DT', 'plotly', 'readr', 'dplyr')
         new_packages <- packages[!(packages %in% installed.packages()[,'Package'])]
         if(length(new_packages)) {
           cat('Installing packages:', paste(new_packages, collapse=', '), '\n')
