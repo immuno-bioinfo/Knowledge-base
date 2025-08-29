@@ -8,7 +8,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '.github/workflows/fetch-repos.yml'
+      - '.github/workflows/fetch_repos.yml'  # Fixed filename reference
   pull_request:
     branches: [ main ]
 

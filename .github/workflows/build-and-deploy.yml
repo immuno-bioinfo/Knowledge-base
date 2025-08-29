@@ -1,7 +1,29 @@
 name: Build and Deploy Knowledge Base
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    # Run daily at 3 AM UTC (1 hour after repository data update)
+    - cron: '0 3 * * *'
+  push:
+    branches: [ main ]
+    paths:
+      - 'analyses/**'
+      - 'protocols/**'
+      - 'tutorials/**'
+      - 'references/**'
+      - 'README.Rmd'
+      - '_config.yml'
+      - 'assets/data/**'  # Trigger when repository data is updated
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'analyses/**'
+      - 'protocols/**'
+      - 'tutorials/**'
+      - 'references/**'
+      - 'README.Rmd'
+      - '_config.yml'
 
 jobs:
   build-and-deploy:
@@ -101,7 +123,7 @@ jobs:
           }
         }
 
-        # Create index.html
+        # Create index.html from README.Rmd
         if (file.exists("README.Rmd")) {
           rmarkdown::render("README.Rmd",
                           output_format = html_document(toc = TRUE, toc_float = TRUE),
