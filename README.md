@@ -1,6 +1,6 @@
 Single Cell Omics Knowledge Base
 ================
-2025-06-24
+2025-08-29
 
 Welcome to the Single Cell Omics knowledge base repository! This
 collaborative resource serves as a centralized hub for protocols,
@@ -32,7 +32,7 @@ This knowledge base aims to:
 ### For Readers
 
 - Browse the [live knowledge
-  base](https://shd-test.github.io/Knowledge-base) (GitHub Pages)
+  base](https://immuno-bioinfo.github.io/Knowledge-base) (GitHub Pages)
 - Navigate through categories using the folder structure above
 - All content is version-controlled and citable via GitHub
 
@@ -110,7 +110,7 @@ To work with this repository locally:
 
 ``` bash
 # Clone the repository
-git clone https://github.com/shd-test/Knowledge-base.git
+git clone https://github.com/immuno-bioinfo/Knowledge-base.git
 cd single-cell-omics-kb
 
 # Install required R packages
@@ -123,9 +123,9 @@ Rscript -e "rmarkdown::render('path/to/your/document.Rmd')"
 ## 📞 Support
 
 - **Issues**: Report problems or request features via [GitHub
-  Issues](https://github.com/shd-test/Knowledge-base/issues)
+  Issues](https://github.com/immuno-bioinfo/Knowledge-base/issues)
 - **Discussions**: Ask questions in [GitHub
-  Discussions](https://github.com/shd-test/Knowledge-base/discussions)
+  Discussions](https://github.com/immuno-bioinfo/Knowledge-base/discussions)
 - **Contact**: Reach out to the maintainers listed in
   [CONTRIBUTORS.md](CONTRIBUTORS.md)
 
@@ -144,5 +144,5 @@ cite:
 
 ------------------------------------------------------------------------
 
-*Last updated: 2025-06-24 \| Contributors: See
+*Last updated: 2025-08-29 \| Contributors: See
 [CONTRIBUTORS.md](CONTRIBUTORS.md)*
