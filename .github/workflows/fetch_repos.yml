@@ -96,11 +96,9 @@ jobs:
                 'Language': repo.get('language', ''),
                 'Stars': repo.get('stargazers_count', 0),
                 'Forks': repo.get('forks_count', 0),
-                'Updated': repo.get('updated_at', ''),
                 'Private': repo.get('private', False),
                 'URL': repo.get('html_url', ''),
-                'Created': repo.get('created_at', ''),
-                'Size': repo.get('size', 0)
+                'Created': repo.get('created_at', '')
             }
             repo_data.append(repo_info)
 
