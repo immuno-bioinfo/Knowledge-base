@@ -2,9 +2,6 @@ name: Build and Deploy Knowledge Base
 
 on:
   workflow_dispatch:  # Manual trigger
-  schedule:
-    # Run daily at 3 AM UTC (1 hour after repository data update)
-    - cron: '0 3 * * *'
   push:
     branches: [ main ]
     paths:
